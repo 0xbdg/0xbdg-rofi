@@ -1,0 +1,5 @@
+*{
+    background-color: Black;
+    text-color: White
+    font: "JetBrainsMono Nerd Font 12"
+}
