@@ -5,6 +5,6 @@
 }
 
 configuration {
-    modes: [ combi ];
+    modes: [ drun ];
     combi-modes: [ drun];
 }
