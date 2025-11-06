@@ -1,5 +1,10 @@
 *{
     background-color: Black;
-    text-color: White
-    font: "JetBrainsMono Nerd Font 12"
+    text-color: White;
+    font: "JetBrainsMono Nerd Font 12";
+}
+
+configuration {
+    modes: [ combi ];
+    combi-modes: [ drun];
 }
