@@ -9,7 +9,7 @@ app_menu(){
 }
 
 wifi_scan(){ 
-    WIFI_LIST=" Back\n󱛄 Rescan\n$(printf '#%.0s' {1..100})\n"
+    WIFI_LIST=" Back\n󱛄 Rescan\n$(printf '#%.0s' {1..65})\n"
     WIFI_LIST+=$(nmcli -t -f ssid d w l | grep -v '^$')
     SELECTED_MENU=$(printf "%b" "$WIFI_LIST" | rofi -dmenu -p "Select SSID")
 
@@ -20,7 +20,7 @@ wifi_scan(){
             nmcli d w rescan
             wifi_scan
             ;;
-        "$(printf '#%.0s' {1..100})") wifi_scan ;;
+        "$(printf '#%.0s' {1..65})") wifi_scan ;;
         *) 
             IS_CONNECTED=$(nmcli --get-value active,ssid d w l | grep "$SELECTED_MENU" | cut -d: -f1)
             IS_PASSWD=$(nmcli --get-value security,ssid d w l | grep "$SELECTED_MENU" | cut -d: -f1)
@@ -28,15 +28,22 @@ wifi_scan(){
             echo "$IS_CONNECTED $IS_PASSWD"
             if [[ "$IS_CONNECTED" != "yes" ]]; then
                 if [[ "$IS_PASSWD" == "" ]]; then
+                    notify-send "Connecting...."
                     nmcli d w c "$SELECTED_MENU"
                     notify-send "WiFi connect success: $SELECTED_MENU"
+                    wifi_scan
                 else
-                    PASSWD=$(echo -e " Back" | rofi -dmenu -p "Password for $SELECTED_MENU" -dump-filter)
+                    PASSWD=$(echo -e " Back" | rofi -dmenu -p "Password for $SELECTED_MENU" -dump-filter -password)
 
                     if [[ $PASSWD == " Back" ]]; then
                         wifi_scan
                     else
-                        nmcli d w c "$SELECTED_MENU" password "$PASSWD"
+                        if nmcli d w c "$SELECTED_MENU" password "$PASSWD"; then
+                            notify-send "Success connect to $SELECTED_MENU"
+                            wifi_scan
+                        else
+                            notify-send "Wrong password, try again!"
+                        fi
                     fi
                                                                                                                                 fi
             else
@@ -48,6 +55,33 @@ wifi_scan(){
 
 }
 
+hidden_wifi(){
+    SSID=$(echo -e "Back" | rofi -dmenu -p "Enter SSID" -dump-filter)
+
+    case $SSID in 
+        "Back") wifi_menu;;
+        *)
+            PW=$(echo -e "Back" | rofi -dmenu -p "Enter Password" -dump-filter)
+
+            if [[ $PW == "Back" ]]; then
+                wifi_menu
+            fi
+            notify-send "Connecting..."
+            nmcli d w c "$SSID" password "$PW" hidden yes
+            notify-send "WiFi connected success $SSID"
+            wifi_menu
+        ;;
+    esac
+}
+
+saved_wifi(){
+    LIST="Back"
+    LIST+=$(nmcli -t -f NAME,DEVICE con show)
+
+    M=$(echo -e "$LIST" | rofi -dmenu)
+
+}
+
 wifi_menu(){
     WIFI=$(echo -e "$WIFI_MENU" | rofi -dmenu)
     case $WIFI in  
@@ -55,6 +89,8 @@ wifi_menu(){
             notify-send "Scanning WiFi..." 
             wifi_scan ;;
         "󱚼 Disable WiFi") ;;
+        "󰈉 Connect to Hidden Network") hidden_wifi;;
+        "󰉉 Show saved WiFi") saved_wifi ;;
         " Back") main_menu ;;
         *) exit ;;
     esac
