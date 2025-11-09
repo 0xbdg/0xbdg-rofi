@@ -38,7 +38,7 @@ wifi_scan(){
                     if [[ $PASSWD == " Back" ]]; then
                         wifi_scan
                     else
-                        if nmcli d w c "$SELECTED_MENU" password "$PASSWD"; then
+                        if nmcli dev wifi connect "$SELECTED_MENU" password "$PASSWD"; then
                             notify-send "Success connect to $SELECTED_MENU"
                             wifi_scan
                         else
@@ -75,10 +75,15 @@ hidden_wifi(){
 }
 
 saved_wifi(){
-    LIST="Back"
+    LIST="Back\n"
     LIST+=$(nmcli -t -f NAME,DEVICE con show)
 
     M=$(echo -e "$LIST" | rofi -dmenu)
+
+    case $M in 
+        "Back") wifi_menu;;
+        *) saved_wifi;;
+    esac
 
 }
 
