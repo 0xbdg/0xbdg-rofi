@@ -102,10 +102,10 @@ wifi_menu(){
             notify-send "Scanning WiFi..." 
             wifi_scan ;;
         "󱚼 $MODE_WIFI WiFi")
-            if [[ $COMM == "Enable" ]]; then
+            if [[ $MODE_WIFI == "Enable" ]]; then
                 nmcli radio wifi on
                 wifi_menu
-            elif [[ $COMM == "Disable" ]]; then
+            elif [[ $MODE_WIFI == "Disable" ]]; then
                 nmcli radio wifi off
                 wifi_menu
             fi
