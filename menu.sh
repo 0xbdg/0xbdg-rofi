@@ -1,7 +1,6 @@
 #!/bin/bash
 
 MAIN_MENU=" Applications\n󱚾 WiFi Settings\n Bluetooth Settings\n System\n󰩈 Exit"
-WIFI_MENU="󱛁 WiFi Scan\n󱚼 Disable WiFi\n󰈉 Connect to Hidden Network\n󰉉 Show saved WiFi\n Back"
 SYSTEM_MENU=" Shutdown\n Reboot\n󰒲 Sleep\n Back"
 
 app_menu(){
@@ -88,12 +87,29 @@ saved_wifi(){
 }
 
 wifi_menu(){
+    COMM=$(nmcli radio wifi)
+    MODE_WIFI=""
+    if [[ $COMM == "enabled" ]]; then
+        MODE_WIFI="Disable"
+    else
+        MODE_WIFI="Enable"
+    fi
+
+    WIFI_MENU="󱛁 WiFi Scan\n󱚼 $MODE_WIFI WiFi\n󰈉 Connect to Hidden Network\n󰉉 Show saved WiFi\n Back"
     WIFI=$(echo -e "$WIFI_MENU" | rofi -dmenu)
     case $WIFI in  
         "󱛁 WiFi Scan") 
             notify-send "Scanning WiFi..." 
             wifi_scan ;;
-        "󱚼 Disable WiFi") ;;
+        "󱚼 $MODE_WIFI WiFi")
+            if [[ $COMM == "Enable" ]]; then
+                nmcli radio wifi on
+                wifi_menu
+            elif [[ $COMM == "Disable" ]]; then
+                nmcli radio wifi off
+                wifi_menu
+            fi
+            ;;
         "󰈉 Connect to Hidden Network") hidden_wifi;;
         "󰉉 Show saved WiFi") saved_wifi ;;
         " Back") main_menu ;;
