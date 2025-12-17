@@ -9,7 +9,7 @@ app_menu(){
 
 wifi_scan(){ 
     WIFI_LIST=" Back\n󱛄 Rescan\n$(printf '#%.0s' {1..65})\n"
-    WIFI_LIST+=$(nmcli -t -f ssid d w l | grep -v '^$')
+    WIFI_LIST+=$(nmcli -t -f ssid d w l | grep -v '^$' )
     SELECTED_MENU=$(printf "%b" "$WIFI_LIST" | rofi -dmenu -p "Select SSID")
 
     case $SELECTED_MENU in
@@ -28,9 +28,12 @@ wifi_scan(){
             if [[ "$IS_CONNECTED" != "yes" ]]; then
                 if [[ "$IS_PASSWD" == "" ]]; then
                     notify-send "Connecting...."
-                    nmcli d w c "$SELECTED_MENU"
-                    notify-send "WiFi connect success: $SELECTED_MENU"
-                    wifi_scan
+                    if nmcli d w c "$SELECTED_MENU"; then
+                        notify-send "WiFi connect success: $SELECTED_MENU"
+                        wifi_scan
+                    else
+                        notify-send "Failed to connect"
+                    fi
                 else
                     PASSWD=$(echo -e " Back" | rofi -dmenu -p "Password for $SELECTED_MENU" -dump-filter -password)
 
@@ -41,10 +44,18 @@ wifi_scan(){
                             notify-send "Success connect to $SELECTED_MENU"
                             wifi_scan
                         else
-                            notify-send "Wrong password, try again!"
+                            nmcli connection modify "$SELECTED_MENU" wifi-sec.key-mgmt wpa-psk
+                            if nmcli connection modify "$SELECTED_MENU" wifi-sec.psk "$PASSWD"; then
+                                nmcli connection up "$SELECTED_MENU"
+                                notify-send "Success connect to $SELECTED_MENU"
+                                wifi_scan
+                            else 
+                                notify-send "Wrong password!"
+                                wifi_scan
+                            fi 
                         fi
                     fi
-                                                                                                                                fi
+                fi
             else
                 notify-send "You are already connected to this WiFI"
                 wifi_scan
